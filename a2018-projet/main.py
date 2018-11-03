@@ -38,10 +38,7 @@ class SoundRecognition():
 
     def train(self):
 
-        model = tf.keras.
-        # Compute logits
-
-        # Compute loss
+        # model = tf.keras.Model(...)
 
         pass
 
