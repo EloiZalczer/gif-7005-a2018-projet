@@ -50,8 +50,8 @@ with tf.Session() as sess:
             tmp = sess.run(value)
             labels = tmp[0]['labels'].values
             audio_embeddings = tmp[1]['audio_embedding'].values
-            # print("Labels : ", labels)
-            # print("Audio embeddings : ", audio_embeddings)
+            print("Labels : ", labels)
+            print("Audio embeddings : ", audio_embeddings)
             data_storage.append(audio_embeddings)
             labels_storage.append(labels)
             print("Enregistrement ", i)
