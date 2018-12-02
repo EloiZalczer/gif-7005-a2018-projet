@@ -18,8 +18,13 @@ class FullyConnectedNet(nn.Module):
         self.L2 = nn.Linear(1000, 1000)
         self.L3 = nn.Linear(1000, 21)
 
-    def forward(self, x):
+        # self.BN1 = nn.BatchNorm1d(10)
+        # self.BN2 = nn.BatchNorm1d(10)
+        # self.BN3 = nn.BatchNorm1d(10)
+        # self.BN4 = nn.BatchNorm1d(10)
 
+
+    def forward(self, x):
         y = self.L1(F.relu(self.C1.forward(x)))
         y = self.L2(F.relu(y))
         y = self.L3(F.relu(y))

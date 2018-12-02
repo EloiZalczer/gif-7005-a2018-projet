@@ -63,7 +63,7 @@ class SoundRecognition():
         optimizer = SGD(self.Model.parameters(), lr=0.01, momentum=0.9)
         self.Model.train()
 
-        for i_epoch in range(self.epochs):
+        for i_epoch in range(int(self.epochs)):
             print("Running one epoch")
             for i_batch, batch in enumerate(self.train_dataset):
                 audio_embedding, labels = batch
@@ -104,10 +104,15 @@ class SoundRecognition():
         predictions_numpy = np.concatenate(all_predictions, axis=0)
         predictions_numpy[predictions_numpy>=0.5] = 1.0
         predictions_numpy[predictions_numpy<0.5] = 0.0
-        y = np.zeros(shape=predictions_numpy.shape)
+        y0 = np.zeros(shape=predictions_numpy.shape)
+        y1 = np.ones(shape=predictions_numpy.shape)
         targets_numpy = np.concatenate(all_targets, axis=0)
-        predictions_numpy = np.where(targets_numpy, predictions_numpy, y)
-        return len(np.where((np.any(predictions_numpy == 1, axis=1)) == True)[0])/len(predictions_numpy)
+        predictions_numpy_least = np.where(targets_numpy, predictions_numpy, y0)
+        predictions_numpy_full = np.where(targets_numpy, predictions_numpy, y1)
+        full_match_metric = len(np.where((np.all(predictions_numpy_full == 1, axis=1)) == True)[0])/len(predictions_numpy)
+        least_match_metric = len(np.where((np.any(predictions_numpy_least == 1, axis=1)) == True)[0]) \
+                /len(np.where((np.any(targets_numpy == True, axis=1)) == True)[0])
+        return least_match_metric, full_match_metric
 
     def run(self, args):
         self.load_args(args)
@@ -125,10 +130,10 @@ class SoundRecognition():
 
         self.train()
 
-        accuracy = self.compute_accuracy()
+        least_match_metric, full_match_metric = self.compute_accuracy()
 
-        print("Accuracy : ", accuracy)
-
+        print("Least match accuracy  : ", least_match_metric)
+        print("Full match accuracy : ", full_match_metric)
 
 
 if __name__ == '__main__':
