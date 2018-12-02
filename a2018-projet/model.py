@@ -14,9 +14,9 @@ class FullyConnectedNet(nn.Module):
 
         self.C1 = nn.Conv1d(10, 10, 5)
 
-        self.L1 = nn.Linear(124, 4000)
-        self.L2 = nn.Linear(4000, 4000)
-        self.L3 = nn.Linear(4000, 527)
+        self.L1 = nn.Linear(124, 1000)
+        self.L2 = nn.Linear(1000, 1000)
+        self.L3 = nn.Linear(1000, 21)
 
     def forward(self, x):
 
@@ -27,4 +27,3 @@ class FullyConnectedNet(nn.Module):
         y = y.mean(dim=1)
 
         return torch.sigmoid(y)
-

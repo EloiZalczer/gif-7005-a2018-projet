@@ -12,9 +12,21 @@ import numpy as np
 class H5Dataset(Dataset):
     def __init__(self, h5_path):
         self.h5_path = h5_path
-        h5_file = h5py.File(h5_path, 'r')
+        self.classes = [137, 81, 74, 111, 307, 328, 339, 336, 283, 288, 432, 418, 500, 0, 8, 22, 14, 441, 427, 444, 388]
+        h5_file = h5py.File(h5_path, 'r+')
+
+        # arrY = h5_file['y'][:]
+        # print(arrY)
+        # res = arrY[:, self.classes]
+        # print(res)
+        # h5_file.__delitem__('y')
+        # h5_file['y'] = res
+
         self.x = h5_file.get('x')
         self.y = h5_file.get('y')
+
+        print(self.x)
+
         self.length = len(self.x)
 
     def __getitem__(self, index):

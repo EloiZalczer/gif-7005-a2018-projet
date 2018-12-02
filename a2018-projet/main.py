@@ -101,21 +101,13 @@ class SoundRecognition():
             all_predictions.append(predictions.cpu().numpy())
             all_targets.append(labels.cpu().numpy())
 
-        print("All predictions : ", all_predictions)
-        print("All targets : ", all_targets)
-        print("All predictions shape : ", all_predictions[0].shape)
-        print("All predictions shape -1 : ", all_predictions[0].shape[-1])
-
         predictions_numpy = np.concatenate(all_predictions, axis=0)
         predictions_numpy[predictions_numpy>=0.5] = 1.0
         predictions_numpy[predictions_numpy<0.5] = 0.0
-        print("Predictions numpy : ", predictions_numpy)
-        print("Predictions numpy shape : ", predictions_numpy.shape)
+        y = np.zeros(shape=predictions_numpy.shape)
         targets_numpy = np.concatenate(all_targets, axis=0)
-        print("Targets numpy : ", targets_numpy)
-        print("Targets numpy shape : ", targets_numpy.shape)
-
-        return (predictions_numpy == targets_numpy).mean()
+        predictions_numpy = np.where(targets_numpy, predictions_numpy, y)
+        return len(np.where((np.any(predictions_numpy == 1, axis=1)) == True)[0])/len(predictions_numpy)
 
     def run(self, args):
         self.load_args(args)
