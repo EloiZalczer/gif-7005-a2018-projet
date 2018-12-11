@@ -5,30 +5,27 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.models import resnet18
 
 
-class FullyConnectedNet(nn.Module):
+class Resnet(nn.Module):
 
     def __init__(self):
         super().__init__()
 
-        self.C1 = nn.Conv1d(10, 10, 5)
+        self.model = resnet18(pretrained=True)
 
-        self.L1 = nn.Linear(124, 1000)
-        self.L2 = nn.Linear(1000, 1000)
-        self.L3 = nn.Linear(1000, 21)
+        dim_before_fc = self.model.fc.in_features
 
-        # self.BN1 = nn.BatchNorm1d(10)
-        # self.BN2 = nn.BatchNorm1d(10)
-        # self.BN3 = nn.BatchNorm1d(10)
-        # self.BN4 = nn.BatchNorm1d(10)
+        self.model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.model.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.model.fc = nn.Linear(dim_before_fc, 21)
 
+        for name, param in self.model.named_parameters():
+            if name != "fc.weight" and name != "fc.bias":
+                param.requires_grad = False
 
     def forward(self, x):
-        y = self.L1(F.relu(self.C1.forward(x)))
-        y = self.L2(F.relu(y))
-        y = self.L3(F.relu(y))
-
-        y = y.mean(dim=1)
+        y = self.model.forward(x)
 
         return torch.sigmoid(y)

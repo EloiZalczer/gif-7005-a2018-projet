@@ -16,6 +16,20 @@ class H5Dataset(Dataset):
         h5_file = h5py.File(h5_path, 'r+')
 
         # arrY = h5_file['y'][:]
+        # arrX = h5_file['x'][:]
+        # print("ArrX shape : ", arrX.shape)
+        # empty_indexes = np.where(np.any(arrY == True, axis=1) == True)[0]
+        # print("Len empty indexes : ", len(empty_indexes))
+        # resY = arrY[empty_indexes][:]
+        # resX = arrX[empty_indexes][:]
+        # print("ResY shape : ", resY.shape)
+        # print("ResX shape : ", resX.shape)
+        # h5_file.__delitem__('x')
+        # h5_file['x'] = resX
+        # h5_file.__delitem__('y')
+        # h5_file['y'] = resY
+
+        # arrY = h5_file['y'][:]
         # print(arrY)
         # res = arrY[:, self.classes]
         # print(res)
@@ -26,6 +40,7 @@ class H5Dataset(Dataset):
         self.y = h5_file.get('y')
 
         print(self.x)
+        print("Len X : ", len(self.x))
 
         self.length = len(self.x)
 

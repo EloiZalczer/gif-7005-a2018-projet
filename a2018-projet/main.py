@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from dataloader import DataLoader
-from model import FullyConnectedNet
+from model import Resnet
 
 import torch
 import torch.nn as nn
@@ -75,7 +75,8 @@ class SoundRecognition():
 
                 optimizer.zero_grad()
 
-                predictions = self.Model(audio_embedding)
+                print("Audio embedding shape : ", audio_embedding.shape)
+                predictions = self.Model(audio_embedding.reshape((audio_embedding.shape[0], 1, 32, 40)))
                 print("Batch number ", i_batch)
                 loss = criterion(predictions, labels)
 
@@ -93,10 +94,11 @@ class SoundRecognition():
             print("Predicting batch ", i_batch)
 
             audio_embedding = audio_embedding.to(self.device)
+            print("Audio embeddings shape : ", audio_embedding.shape)
             labels = labels.to(self.device)
 
             with torch.no_grad():
-                predictions = self.Model(audio_embedding)
+                predictions = self.Model(audio_embedding.reshape((audio_embedding.shape[0], 1, 32, 40)))
 
             all_predictions.append(predictions.cpu().numpy())
             all_targets.append(labels.cpu().numpy())
@@ -112,7 +114,16 @@ class SoundRecognition():
         full_match_metric = len(np.where((np.all(predictions_numpy_full == 1, axis=1)) == True)[0])/len(predictions_numpy)
         least_match_metric = len(np.where((np.any(predictions_numpy_least == 1, axis=1)) == True)[0]) \
                 /len(np.where((np.any(targets_numpy == True, axis=1)) == True)[0])
-        return least_match_metric, full_match_metric
+        predictions_numpy_count = np.where(predictions_numpy, targets_numpy, y1)
+        match_count_metric = 1 - (len(np.where((np.any(predictions_numpy_count == 0, axis=1)) == True)[0])/len(predictions_numpy))
+
+        # Least match accuracy : proportion des donnees ou au moins une des classes a ete trouvee
+
+        # Full match accuracy : proportion des donnees ou toutes les classes ont ete trouvees
+
+        # Match count accuracy : proportion des donnees ou aucune mauvaise classe n'a ete trouvee
+
+        return least_match_metric, full_match_metric, match_count_metric
 
     def run(self, args):
         self.load_args(args)
@@ -126,14 +137,15 @@ class SoundRecognition():
         testDataLoader = DataLoader(self.testdir, **dataloader_args)
         self.test_dataset = testDataLoader.load_data()
 
-        self.Model = FullyConnectedNet()
+        self.Model = Resnet()
 
         self.train()
 
-        least_match_metric, full_match_metric = self.compute_accuracy()
+        least_match_metric, full_match_metric, match_count_metric = self.compute_accuracy()
 
         print("Least match accuracy  : ", least_match_metric)
         print("Full match accuracy : ", full_match_metric)
+        print("Match count accuracy : ", match_count_metric)
 
 
 if __name__ == '__main__':
