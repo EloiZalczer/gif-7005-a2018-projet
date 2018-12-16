@@ -19,13 +19,15 @@ class SoundRecognition():
         self.testdir=""
         self.epochs = 1
         self.device = 'cpu'
+        self.save = False
+        self.load = False
 
     def help(self):
-        print("Usage : main.py [-hv] [-e <epochs>] -i <input file.h5> -t <test file.h5>")
+        print("Usage : main.py [-hv] [-e <epochs>] -i <input file.h5> -t <test file.h5> -s")
 
     def load_args(self, args):
         try:
-            opts, args = getopt.getopt(args, "e:hi:t:v", ["help", "idir="])
+            opts, args = getopt.getopt(args, "e:hi:t:v:s:l", ["help", "idir="])
         except getopt.GetoptError as err:
             print(str(err))
             self.help()
@@ -43,6 +45,10 @@ class SoundRecognition():
                 self.testdir = a
             elif o in ("-e", "--epochs"):
                 self.epochs = a
+            elif o in ("-s", "--save"):
+                self.save = True
+            elif o in ("-l", "--load"):
+                self.load = True
             else:
                 assert False, "Unhandled option"
 
@@ -137,15 +143,24 @@ class SoundRecognition():
         testDataLoader = DataLoader(self.testdir, **dataloader_args)
         self.test_dataset = testDataLoader.load_data()
 
-        self.Model = Resnet()
-
-        self.train()
+        if(self.load):
+            try:
+                self.Model = torch.load("model.pt")
+            except:
+                self.Model = Resnet()
+                self.train()
+        else:
+            self.Model = Resnet()
+            self.train()
 
         least_match_metric, full_match_metric, match_count_metric = self.compute_accuracy()
 
         print("Least match accuracy  : ", least_match_metric)
         print("Full match accuracy : ", full_match_metric)
         print("Match count accuracy : ", match_count_metric)
+        
+        if(self.save):
+            torch.save(self.Model, "model.pt")
 
 
 if __name__ == '__main__':
