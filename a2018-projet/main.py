@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from dataloader import DataLoader
 from model import Resnet
+from utils import compute_stats, compute_mean_stats
 
 import torch
 import torch.nn as nn
@@ -82,14 +83,14 @@ class SoundRecognition():
                 optimizer.zero_grad()
 
                 print("Audio embedding shape : ", audio_embedding.shape)
-                predictions = self.Model(audio_embedding.reshape((audio_embedding.shape[0], 1, 32, 40)))
+                predictions = self.Model(audio_embedding.reshape((audio_embedding.shape[0], 10, 16, 8)))
                 print("Batch number ", i_batch)
                 loss = criterion(predictions, labels)
 
                 loss.backward()
                 optimizer.step()
 
-    def compute_accuracy(self):
+    def evaluate(self):
         self.Model.eval()
 
         all_predictions = []
@@ -104,17 +105,30 @@ class SoundRecognition():
             labels = labels.to(self.device)
 
             with torch.no_grad():
-                predictions = self.Model(audio_embedding.reshape((audio_embedding.shape[0], 1, 32, 40)))
+                predictions = self.Model(audio_embedding.reshape((audio_embedding.shape[0], 10, 16, 8)))
 
             all_predictions.append(predictions.cpu().numpy())
             all_targets.append(labels.cpu().numpy())
 
+        np.set_printoptions(threshold=np.nan)
+        print("All predictions : ", all_predictions[0:200])
         predictions_numpy = np.concatenate(all_predictions, axis=0)
         predictions_numpy[predictions_numpy>=0.5] = 1.0
         predictions_numpy[predictions_numpy<0.5] = 0.0
         y0 = np.zeros(shape=predictions_numpy.shape)
         y1 = np.ones(shape=predictions_numpy.shape)
         targets_numpy = np.concatenate(all_targets, axis=0)
+
+        mAP, mAUC = compute_mean_stats(predictions_numpy, targets_numpy)
+
+        print("Predictions numpy : ", predictions_numpy[0:200])
+        print("Targets numpy : ", targets_numpy[0:200])
+        # print(predictions_numpy[np.where((np.any(predictions_numpy == 1, axis=1)) == True)[0]][0:200])
+        # print(targets_numpy[np.where((np.any(targets_numpy == 1, axis=1)) == True)[0]][0:200])
+
+        print("mAp : ", mAP)
+        print("mAUC : ", mAUC)
+
         predictions_numpy_least = np.where(targets_numpy, predictions_numpy, y0)
         predictions_numpy_full = np.where(targets_numpy, predictions_numpy, y1)
         full_match_metric = len(np.where((np.all(predictions_numpy_full == 1, axis=1)) == True)[0])/len(predictions_numpy)
@@ -153,7 +167,7 @@ class SoundRecognition():
             self.Model = Resnet()
             self.train()
 
-        least_match_metric, full_match_metric, match_count_metric = self.compute_accuracy()
+        least_match_metric, full_match_metric, match_count_metric = self.evaluate()
 
         print("Least match accuracy  : ", least_match_metric)
         print("Full match accuracy : ", full_match_metric)

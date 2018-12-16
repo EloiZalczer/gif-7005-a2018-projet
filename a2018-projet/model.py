@@ -17,13 +17,13 @@ class Resnet(nn.Module):
 
         dim_before_fc = self.model.fc.in_features
 
-        self.model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.model.conv1 = nn.Conv2d(10, 64, kernel_size=3, stride=2, padding=1, bias=False)
         self.model.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.model.fc = nn.Linear(dim_before_fc, 21)
 
-        for name, param in self.model.named_parameters():
-            if name != "fc.weight" and name != "fc.bias":
-                param.requires_grad = False
+        # for name, param in self.model.named_parameters():
+        #     if name != "fc.weight" and name != "fc.bias":
+        #         param.requires_grad = False
 
     def forward(self, x):
         y = self.model.forward(x)
