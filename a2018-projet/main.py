@@ -163,20 +163,36 @@ class SoundRecognition():
             except:
                 self.Model = Resnet()
                 self.train()
+                least_match_metric, full_match_metric, match_count_metric = self.evaluate()
+                print("Least match accuracy  : ", least_match_metric)
+                print("Full match accuracy : ", full_match_metric)
+                print("Match count accuracy : ", match_count_metric)    
         else:
             self.Model = Resnet()
             self.train()
-
-        least_match_metric, full_match_metric, match_count_metric = self.evaluate()
-
-        print("Least match accuracy  : ", least_match_metric)
-        print("Full match accuracy : ", full_match_metric)
-        print("Match count accuracy : ", match_count_metric)
-        
+            least_match_metric, full_match_metric, match_count_metric = self.evaluate()
+            print("Least match accuracy  : ", least_match_metric)
+            print("Full match accuracy : ", full_match_metric)
+            print("Match count accuracy : ", match_count_metric)
+            
         if(self.save):
             torch.save(self.Model, "model.pt")
 
 
+    def predictSingle(self, x = None):
+        if(x == None):
+            print("X iq none and have been randomly generated to test the model")
+            x = torch.randn(1, 1, 16,8)
+        else:
+            x = torch.view(1,1,16,8)
+            #x = torch.cat((x, torch.randn(1, 10, 16,8)), 0)
+
+        ret = self.Model(x)
+        return ret
+        
+
 if __name__ == '__main__':
     model = SoundRecognition()
     model.run(sys.argv[1:])
+    print('------------------')
+    print(model.predictSingle())
