@@ -8,6 +8,11 @@ from vggish_input import wavfile_to_examples
 import os
 import csv
 import json
+import sys
+sys.path.insert(0, './models/research/audioset/')
+from vggish_postprocess import Postprocessor
+import tensorflow as tf
+import vggish_slim
 
 def download_sample(url, start_time, end_time):
     ydl_opts = {
@@ -22,21 +27,21 @@ def download_sample(url, start_time, end_time):
     print(start_time, end_time)
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         ydl.download(['https://www.youtube.com/watch?v='+url+'&feature=youtu.be'])
-        subprocess.call(['ffmpeg', '-i', 'sound.wav', '-ss', start_time, '-to', end_time, '-acodec', 'pcm_s16le', url+'.wav'])
+        subprocess.call(['ffmpeg', '-i', 'sound.wav', '-ss', start_time, '-to', end_time, '-acodec', 'pcm_s16le', '_'+url+'.wav'])
+    
     subprocess.call(['rm', 'sound.wav'])
-
 
 def cleanDir():
     subprocess.call(['rm', '*.wav'])
 
-def downloadClass(classLabels = []):
+def downloadClass(classLabels = [], n = 100):
     count = 0
     with open('balanced_train_segments.csv', 'r', newline='') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=',', quotechar="'")
         for row in spamreader:
             count += 1
             if (count >= 5):
-                if (classLabels == None):
+                if (classLabels == None and count < n):
                     try:
                         download_sample(row[0], row[1], row[2]) 
                     except Exception as inst:
@@ -52,39 +57,16 @@ def downloadClass(classLabels = []):
                             except Exception as inst:
                                 print(inst)
 
-'''
-count = 0
+def vggExamples(fileName = None):
+    if(fileName == None):
+        files = list(filter(lambda x: x.endswith('.wav'),os.listdir()))
+    else:
+        files = [fileName] 
 
-subprocess.call(['rm', '*.wav'])
+    PCAfiles = list()
+    for f in files:
+        subprocess.call(['python3', 'models/research/audioset/custom_inference.py', f])
+        PCAexample = np.load("./PCA.npy")
+        PCAfiles.append(PCAexample)
 
-with open('balanced_train_segments.csv', 'r', newline='') as csvfile:
-    spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-    for row in spamreader:
-        count += 1
-        if (count >= 5):
-            #print(', '.join(row))
-            try:
-                download_sample(row[0], row[1], row[2]) 
-            except Exception as inst:
-                print(inst)
-            if(count >= 105):
-                break
-
-
-files = list(filter(lambda s: s[-4:] == '.wav',os.listdir()))
-
-X = np.zeros((1,96,64))
-
-for i in range(len(files)):
-    X = np.concatenate((X, wavfile_to_examples(files[i])), axis = 0)
-    
-X = X[1:,:,:]
-
-from skimage import io
-
-for x in X:
-    print(x.shape)
-    io.imshow(x)
-    io.show()
-''' 
-                            
+    return PCAfiles
