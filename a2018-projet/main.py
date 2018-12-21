@@ -24,7 +24,7 @@ class SoundRecognition():
         self.load = False
 
     def help(self):
-        print("Usage : main.py [-hv] [-e <epochs>] -i <input file.h5> -t <test file.h5> -s")
+        print("Usage : main.py [-hv] [-e <epochs>] -i <input file.h5> -t <test file.h5> -s True -l True")
 
     def load_args(self, args):
         try:
@@ -179,13 +179,14 @@ class SoundRecognition():
             torch.save(self.Model, "model.pt")
 
 
-    def predictSingle(self, x = None):
-        if(x == None):
+    def predictSingle(self, x = []):
+        if(len(X) == 0):
             print("X iq none and have been randomly generated to test the model")
             x = torch.randn(1, 1, 16,8)
         else:
-            x = torch.view(1,1,16,8)
-            #x = torch.cat((x, torch.randn(1, 10, 16,8)), 0)
+            x = torch.from_numpy(x)
+            x = x.view(1,1,16,8)
+            x = x.float()
 
         ret = self.Model(x)
         return ret

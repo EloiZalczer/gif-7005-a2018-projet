@@ -28,7 +28,7 @@ def download_sample(url, start_time, end_time):
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         ydl.download(['https://www.youtube.com/watch?v='+url+'&feature=youtu.be'])
         subprocess.call(['ffmpeg', '-i', 'sound.wav', '-ss', start_time, '-to', end_time, '-acodec', 'pcm_s16le', '_'+url+'.wav'])
-    
+
     subprocess.call(['rm', 'sound.wav'])
 
 def cleanDir():
@@ -46,7 +46,7 @@ def downloadClass(classLabels = [], n = 100):
                         download_sample(row[0], row[1], row[2]) 
                     except Exception as inst:
                         print(inst)
-                        
+
                 else:
                     string = ','.join(row[3:])
                     labels = string[2:-1].split(',')
