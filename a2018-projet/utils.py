@@ -2,14 +2,11 @@
 
 import numpy as np
 from sklearn import metrics
+from scipy import stats
 
 def compute_stats(output, labels):
 
     stats = []
-
-    # print("Labels : ", labels)
-    print("Labels shape : ", labels.shape)
-    print("Output shape : ", output.shape)
 
     for c in range(labels.shape[1]):
         # Average precision
@@ -38,9 +35,12 @@ def compute_stats(output, labels):
     return stats
 
 def compute_mean_stats(output, labels):
-    stats = compute_stats(output, labels)
+    statistics = compute_stats(output, labels)
 
-    mAP = np.mean([stat['AP'] for stat in stats])
-    mAUC = np.mean([stat['auc'] for stat in stats])
+    mAP = np.mean([stat['AP'] for stat in statistics])
+    mAUC = np.mean([stat['auc'] for stat in statistics])
 
-    return mAP, mAUC
+    standard_normal = stats.norm()
+    d_prime = standard_normal.ppf(mAUC) * np.sqrt(2.0)
+
+    return mAP, mAUC, d_prime

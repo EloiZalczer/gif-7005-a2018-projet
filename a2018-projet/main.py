@@ -66,23 +66,20 @@ class SoundRecognition():
     def train(self):
 
         self.Model.to(self.device)
-        criterion = nn.BCELoss()
+        criterion = nn.MultiLabelSoftMarginLoss()
         optimizer = SGD(self.Model.parameters(), lr=0.01, momentum=0.9)
         self.Model.train()
 
         for i_epoch in range(int(self.epochs)):
-            print("Running one epoch")
+            print("Running epoch ", i_epoch+1)
             for i_batch, batch in enumerate(self.train_dataset):
                 audio_embedding, labels = batch
-
-                #print("audio_embedding : ", audio_embedding)
 
                 audio_embedding = audio_embedding.to(self.device)
                 labels = labels.to(self.device)
 
                 optimizer.zero_grad()
 
-                print("Audio embedding shape : ", audio_embedding.shape)
                 predictions = self.Model(audio_embedding.reshape((audio_embedding.shape[0], 10, 16, 8)))
                 print("Batch number ", i_batch)
                 loss = criterion(predictions, labels)
@@ -101,7 +98,6 @@ class SoundRecognition():
             print("Predicting batch ", i_batch)
 
             audio_embedding = audio_embedding.to(self.device)
-            print("Audio embeddings shape : ", audio_embedding.shape)
             labels = labels.to(self.device)
 
             with torch.no_grad():
@@ -110,8 +106,6 @@ class SoundRecognition():
             all_predictions.append(predictions.cpu().numpy())
             all_targets.append(labels.cpu().numpy())
 
-        np.set_printoptions(threshold=np.nan)
-        print("All predictions : ", all_predictions[0:200])
         predictions_numpy = np.concatenate(all_predictions, axis=0)
         predictions_numpy[predictions_numpy>=0.5] = 1.0
         predictions_numpy[predictions_numpy<0.5] = 0.0
@@ -119,15 +113,7 @@ class SoundRecognition():
         y1 = np.ones(shape=predictions_numpy.shape)
         targets_numpy = np.concatenate(all_targets, axis=0)
 
-        mAP, mAUC = compute_mean_stats(predictions_numpy, targets_numpy)
-
-        print("Predictions numpy : ", predictions_numpy[0:200])
-        print("Targets numpy : ", targets_numpy[0:200])
-        # print(predictions_numpy[np.where((np.any(predictions_numpy == 1, axis=1)) == True)[0]][0:200])
-        # print(targets_numpy[np.where((np.any(targets_numpy == 1, axis=1)) == True)[0]][0:200])
-
-        print("mAp : ", mAP)
-        print("mAUC : ", mAUC)
+        mAP, mAUC, d_prime = compute_mean_stats(predictions_numpy, targets_numpy)
 
         predictions_numpy_least = np.where(targets_numpy, predictions_numpy, y0)
         predictions_numpy_full = np.where(targets_numpy, predictions_numpy, y1)
@@ -143,7 +129,7 @@ class SoundRecognition():
 
         # Match count accuracy : proportion des donnees ou aucune mauvaise classe n'a ete trouvee
 
-        return least_match_metric, full_match_metric, match_count_metric
+        return least_match_metric, full_match_metric, match_count_metric, mAP, mAUC, d_prime
 
     def run(self, args):
         self.load_args(args)
@@ -163,14 +149,20 @@ class SoundRecognition():
             except:
                 self.Model = Resnet()
                 self.train()
-                least_match_metric, full_match_metric, match_count_metric = self.evaluate()
+                least_match_metric, full_match_metric, match_count_metric, mAP, mAUC, d_prime = self.evaluate()
+                print("mAp : ", mAP)
+                print("mAUC : ", mAUC)
+                print("D prime : ", d_prime)
                 print("Least match accuracy  : ", least_match_metric)
                 print("Full match accuracy : ", full_match_metric)
                 print("Match count accuracy : ", match_count_metric)    
         else:
             self.Model = Resnet()
             self.train()
-            least_match_metric, full_match_metric, match_count_metric = self.evaluate()
+            least_match_metric, full_match_metric, match_count_metric, mAP, mAUC, d_prime = self.evaluate()
+            print("mAp : ", mAP)
+            print("mAUC : ", mAUC)
+            print("D prime : ", d_prime)
             print("Least match accuracy  : ", least_match_metric)
             print("Full match accuracy : ", full_match_metric)
             print("Match count accuracy : ", match_count_metric)
@@ -180,12 +172,12 @@ class SoundRecognition():
 
 
     def predictSingle(self, x = []):
-        if(len(X) == 0):
+        if(len(x) == 0):
             print("X iq none and have been randomly generated to test the model")
-            x = torch.randn(1, 1, 16,8)
+            x = torch.randn(1, 10, 16,8)
         else:
             x = torch.from_numpy(x)
-            x = x.view(1,1,16,8)
+            x = x.view(1,10,16,8)
             x = x.float()
 
         ret = self.Model(x)

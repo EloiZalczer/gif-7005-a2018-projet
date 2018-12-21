@@ -15,6 +15,8 @@ class H5Dataset(Dataset):
         self.classes = [137, 81, 74, 111, 307, 328, 339, 336, 283, 288, 432, 418, 500, 0, 8, 22, 14, 441, 427, 444, 388]
         h5_file = h5py.File(h5_path, 'r+')
 
+        # Code commente : pre-traitement du jeu de donnees (execute une seule fois)
+
         # arrY = h5_file['y'][:]
         # arrX = h5_file['x'][:]
         # print("ArrX shape : ", arrX.shape)
@@ -38,9 +40,6 @@ class H5Dataset(Dataset):
 
         self.x = h5_file.get('x')
         self.y = h5_file.get('y')
-
-        print(self.x)
-        print("Len X : ", len(self.x))
 
         self.length = len(self.x)
 

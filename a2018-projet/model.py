@@ -29,3 +29,19 @@ class Resnet(nn.Module):
         y = self.model.forward(x)
 
         return torch.sigmoid(y)
+
+class FullyConnectedNet(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+        self.L1 = torch.nn.Linear(128, 1000)
+        self.L2 = torch.nn.Linear(1000, 1000)
+        self.L3 = torch.nn.Linear(1000, 21)
+
+    def forward(self, x):
+        y= F.relu(self.L1(x))
+        y = F.relu(self.L2(y))
+        y = self.L3(y)
+
+        return y
